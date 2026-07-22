@@ -646,3 +646,4 @@ class Principal(BaseModel):
 class AuthSessionView(BaseModel):
     user: UserPublic
     auth_mode: str
+    token: str | None = None

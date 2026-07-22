@@ -122,7 +122,7 @@ def build_v1_router(resolve_container) -> APIRouter:
             tenant_id=user.tenant_id,
             actor_id=user.id,
         )
-        return AuthSessionView(user=user, auth_mode=app_container.settings.auth_mode)
+        return AuthSessionView(user=user, auth_mode=app_container.settings.auth_mode, token=token)
 
     @router.get("/auth/me", response_model=AuthSessionView)
     def auth_me(
@@ -142,7 +142,7 @@ def build_v1_router(resolve_container) -> APIRouter:
         app_container: AppContainer = Depends(resolve_container),
     ) -> Response:
         principal = _principal(request)
-        token = request.cookies.get(app_container.settings.auth_cookie_name)
+        token = extract_token(request, app_container.settings.auth_cookie_name)
         app_container.auth.logout(token)
         app_container.trace.audit(
             None,
@@ -1346,6 +1346,22 @@ def _capability_error(error: CapabilityError) -> HTTPException:
 
 def _forbidden(message: str = "You do not have permission to perform this action") -> HTTPException:
     return HTTPException(status_code=403, detail={"code": "PERMISSION_DENIED", "message": message})
+
+
+def extract_token(request: Request, cookie_name: str) -> str | None:
+    """Resolve the session token: cookie → Bearer header → ?token= query param.
+
+    The query-param fallback exists because browser EventSource connections
+    cannot set custom headers (used by the SSE task event stream).
+    """
+    token = request.cookies.get(cookie_name)
+    if not token:
+        authorization = request.headers.get("Authorization", "")
+        if authorization.lower().startswith("bearer "):
+            token = authorization[7:].strip()
+    if not token:
+        token = request.query_params.get("token")
+    return token or None
 
 
 def _principal(request: Request) -> Principal:

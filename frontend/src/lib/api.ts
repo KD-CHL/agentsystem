@@ -34,6 +34,25 @@ import type {
  */
 export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
 
+const TOKEN_KEY = "agentsystem_token";
+
+export function getToken(): string | null {
+  try {
+    return localStorage.getItem(TOKEN_KEY);
+  } catch {
+    return null;
+  }
+}
+
+export function setToken(token: string | null): void {
+  try {
+    if (token) localStorage.setItem(TOKEN_KEY, token);
+    else localStorage.removeItem(TOKEN_KEY);
+  } catch {
+    // Storage unavailable (private mode) — session simply won't persist.
+  }
+}
+
 export class ApiError extends Error {
   code: string;
   requestId?: string;
@@ -52,8 +71,13 @@ async function performRequest(path: string, init?: RequestInit): Promise<Respons
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
+  const token = getToken();
+  if (token && !headers.has("Authorization")) {
+    headers.set("Authorization", `Bearer ${token}`);
+  }
   const response = await fetch(`${API_BASE}${path}`, { credentials: "include", ...init, headers });
   if (!response.ok) {
+    if (response.status === 401) setToken(null);
     let body: ApiErrorBody = {};
     try {
       body = (await response.json()) as ApiErrorBody;
@@ -96,12 +120,25 @@ function queryString(params: Record<string, string | string[] | number | undefin
 
 export const api = {
   me: () => request<AuthSession>("/api/v1/auth/me"),
-  login: (username: string, password: string) =>
-    request<AuthSession>("/api/v1/auth/login", {
+  login: async (username: string, password: string) => {
+    const session = await request<AuthSession>("/api/v1/auth/login", {
       method: "POST",
       body: JSON.stringify({ username, password }),
-    }),
+    });
+    if (session.token) setToken(session.token);
+    return session;
+  },
   logout: () => request<void>("/api/v1/auth/logout", { method: "POST" }),
+  githubConfig: () =>
+    request<{ enabled: boolean; client_id: string }>("/api/v1/auth/github/config"),
+  githubLogin: async (code: string) => {
+    const session = await request<AuthSession>("/api/v1/auth/github", {
+      method: "POST",
+      body: JSON.stringify({ code }),
+    });
+    if (session.token) setToken(session.token);
+    return session;
+  },
   users: () => request<User[]>("/api/v1/users"),
   createUser: (payload: { username: string; display_name: string; password: string; role: UserRole }) =>
     request<User>("/api/v1/users", { method: "POST", body: JSON.stringify(payload) }),

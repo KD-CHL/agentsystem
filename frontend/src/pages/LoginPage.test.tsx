@@ -8,16 +8,20 @@ import { LoginPage } from "./LoginPage";
 describe("LoginPage", () => {
   afterEach(() => vi.unstubAllGlobals());
 
-  it("creates a same-origin session and returns the authenticated user", async () => {
+  it("creates a same-origin session and persists the returned token", async () => {
     const session = {
       auth_mode: "local",
+      token: "test-session-token",
       user: {
         id: "user_1", tenant_id: "default", username: "admin", display_name: "Administrator",
         role: "admin", status: "active", created_at: new Date().toISOString(), updated_at: new Date().toISOString(), last_login_at: null,
       },
     } as const;
-    const fetchMock = vi.fn().mockResolvedValue(new Response(JSON.stringify(session), { status: 200, headers: { "Content-Type": "application/json" } }));
+    const fetchMock = vi.fn().mockImplementation(() =>
+      Promise.resolve(new Response(JSON.stringify(session), { status: 200, headers: { "Content-Type": "application/json" } })),
+    );
     vi.stubGlobal("fetch", fetchMock);
+    localStorage.removeItem("agentsystem_token");
     const signedIn = vi.fn();
     const queryClient = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
     render(<QueryClientProvider client={queryClient}><LoginPage onSignedIn={signedIn} /></QueryClientProvider>);
@@ -28,5 +32,6 @@ describe("LoginPage", () => {
 
     await waitFor(() => expect(signedIn).toHaveBeenCalledWith(session));
     expect(fetchMock).toHaveBeenCalledWith("/api/v1/auth/login", expect.objectContaining({ method: "POST", credentials: "include" }));
+    expect(localStorage.getItem("agentsystem_token")).toBe("test-session-token");
   });
 });

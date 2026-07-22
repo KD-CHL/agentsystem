@@ -7,6 +7,7 @@ __pycache__/
 .ruff_cache/
 frontend/node_modules/
 frontend/dist/
+frontend/api/.api-data/
 *.tsbuildinfo
 data/
 *.egg-info/

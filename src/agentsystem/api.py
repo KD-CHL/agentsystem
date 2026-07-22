@@ -10,7 +10,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from agentsystem.api_v1 import build_v1_router
+from agentsystem.api_v1 import build_v1_router, extract_token
 from agentsystem.auth import AuthenticationError, AuthorizationError
 from agentsystem.config import get_settings
 from agentsystem.container import AppContainer, get_container
@@ -86,10 +86,7 @@ def create_app(container: AppContainer | None = None) -> FastAPI:
             or any(path == prefix or path.startswith(f"{prefix}/") for prefix in legacy_api_prefixes)
         ) and path not in public_api_paths
         if protected_api:
-            token = request.cookies.get(resolve_container().settings.auth_cookie_name)
-            authorization = request.headers.get("Authorization", "")
-            if not token and authorization.lower().startswith("bearer "):
-                token = authorization[7:].strip()
+            token = extract_token(request, resolve_container().settings.auth_cookie_name)
             try:
                 request.state.principal = resolve_container().auth.principal_for_token(token)
             except AuthenticationError as exc:

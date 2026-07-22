@@ -43,6 +43,7 @@ export interface User {
 export interface AuthSession {
   user: User;
   auth_mode: "dev" | "local";
+  token?: string;
 }
 
 export interface SystemInfo {

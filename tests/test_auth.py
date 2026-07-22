@@ -145,3 +145,33 @@ def test_local_users_and_sessions_survive_sqlite_restart(tmp_path: Path) -> None
     second_client.cookies.set(settings.auth_cookie_name, cookie)
 
     assert second_client.get("/api/v1/auth/me").status_code == 200
+
+
+def test_bearer_token_auth_for_cookieless_clients() -> None:
+    container = AppContainer(settings=local_settings())
+    client = TestClient(create_app(container))
+
+    signed_in = login(client)
+    assert signed_in.status_code == 200
+    token = signed_in.json()["token"]
+    assert token
+
+    # A client without cookies can authenticate via the Authorization header.
+    header_client = TestClient(create_app(container))
+    me = header_client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"})
+    assert me.status_code == 200
+    assert me.json()["user"]["username"] == "admin"
+    assert me.json().get("token") is None
+
+    # EventSource cannot set headers, so ?token= must work as a fallback.
+    query_client = TestClient(create_app(container))
+    query_me = query_client.get(f"/api/v1/auth/me?token={token}")
+    assert query_me.status_code == 200
+
+    # Logout via Bearer header revokes the session.
+    logout = header_client.post("/api/v1/auth/logout", headers={"Authorization": f"Bearer {token}"})
+    assert logout.status_code == 204
+    revoked = TestClient(create_app(container)).get(
+        "/api/v1/auth/me", headers={"Authorization": f"Bearer {token}"}
+    )
+    assert revoked.status_code == 401

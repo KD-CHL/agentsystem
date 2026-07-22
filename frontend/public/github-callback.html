@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>GitHub 登录 · AGENTSYSTEM</title>
+    <style>
+      :root { color-scheme: dark; }
+      * { box-sizing: border-box; margin: 0; }
+      body {
+        display: grid;
+        min-height: 100dvh;
+        place-items: center;
+        padding: 20px;
+        background: #0b0e14;
+        color: #c7d0dd;
+        font-family: "Inter", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif;
+      }
+      .card {
+        width: min(100%, 360px);
+        padding: 34px 26px;
+        border: 1px solid #232a36;
+        border-radius: 12px;
+        background: #10141c;
+        box-shadow: 0 18px 50px rgb(0 0 0 / 0.45);
+        text-align: center;
+      }
+      .brand { font-size: 13px; font-weight: 800; letter-spacing: 0.08em; color: #e8edf5; }
+      .brand span { color: #6ea8fe; }
+      .status { margin-top: 18px; font-size: 12px; line-height: 1.6; }
+      .spinner {
+        width: 26px;
+        height: 26px;
+        margin: 0 auto 14px;
+        border: 3px solid #232a36;
+        border-top-color: #6ea8fe;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      .error { color: #f0868f; }
+      a { color: #6ea8fe; font-size: 12px; text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .hidden { display: none; }
+    </style>
+  </head>
+  <body>
+    <main class="card">
+      <p class="brand">AGENT<span>SYSTEM</span></p>
+      <div id="busy">
+        <div class="spinner" aria-hidden="true"></div>
+        <p class="status">正在完成 GitHub 登录…<br />Completing GitHub sign-in…</p>
+      </div>
+      <div id="done" class="hidden">
+        <p class="status" id="message"></p>
+      </div>
+      <div id="failed" class="hidden">
+        <p class="status error" id="errorMessage"></p>
+        <p style="margin-top: 14px"><a href="/">返回登录 · Back to sign in</a></p>
+      </div>
+    </main>
+    <script>
+      (async function () {
+        const busy = document.getElementById("busy");
+        const done = document.getElementById("done");
+        const failed = document.getElementById("failed");
+        const show = (el) => { busy.classList.add("hidden"); el.classList.remove("hidden"); };
+
+        const code = new URLSearchParams(location.search).get("code");
+        if (!code) {
+          document.getElementById("errorMessage").textContent = "缺少授权码 code · Missing authorization code";
+          show(failed);
+          return;
+        }
+        try {
+          const response = await fetch("/api/v1/auth/github", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ code }),
+          });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok || !data.token) {
+            throw new Error((data.error && data.error.message) || "GitHub 登录失败 (" + response.status + ")");
+          }
+          try {
+            localStorage.setItem("agentsystem_token", data.token);
+          } catch {
+            // Storage unavailable — session will not persist across reloads.
+          }
+          document.getElementById("message").textContent = "登录成功，正在进入工作台… · Signed in, opening workspace…";
+          show(done);
+          setTimeout(() => { location.href = "/"; }, 700);
+        } catch (error) {
+          document.getElementById("errorMessage").textContent = error && error.message ? error.message : String(error);
+          show(failed);
+        }
+      })();
+    </script>
+  </body>
+</html>

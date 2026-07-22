@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Navigate, Outlet } from "react-router-dom";
 
 import { LoginPage } from "../pages/LoginPage";
-import { api, ApiError } from "../lib/api";
+import { api, ApiError, setToken } from "../lib/api";
 import type { AuthSession, Permission, UserRole } from "../types";
 
 const rolePermissions: Record<UserRole, ReadonlySet<Permission>> = {
@@ -61,6 +61,7 @@ export function AuthBoundary() {
     can: (permission) => rolePermissions[session.user.role].has(permission),
     logout: async () => {
       await api.logout();
+      setToken(null);
       setSignedOut(true);
       queryClient.removeQueries();
     },

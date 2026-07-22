@@ -32,7 +32,7 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { agentIcons, agentLabels, agentOrder } from "../components/agentVisuals";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAuth } from "../auth/AuthContext";
-import { api, API_BASE } from "../lib/api";
+import { api, API_BASE, getToken } from "../lib/api";
 import type { AgentName, AgentSummary, Approval, Artifact, TaskRecord, TaskView, Trace } from "../types";
 import styles from "./WorkbenchPage.module.css";
 
@@ -91,7 +91,11 @@ export function WorkbenchPage() {
 
   useEffect(() => {
     if (!selectedTaskId) return;
-    const source = new EventSource(`${API_BASE}/api/v1/tasks/${selectedTaskId}/events?follow=true`, { withCredentials: true });
+    // EventSource cannot set headers, so the session token travels as a query
+    // parameter (the backend accepts cookie → Bearer header → ?token= in order).
+    const token = getToken();
+    const tokenParam = token ? `&token=${encodeURIComponent(token)}` : "";
+    const source = new EventSource(`${API_BASE}/api/v1/tasks/${selectedTaskId}/events?follow=true${tokenParam}`, { withCredentials: true });
     const invalidate = () => {
       void queryClient.invalidateQueries({ queryKey: ["task", selectedTaskId] });
       void queryClient.invalidateQueries({ queryKey: ["agents", selectedTaskId] });
