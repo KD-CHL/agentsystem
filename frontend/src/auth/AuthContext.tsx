@@ -44,11 +44,15 @@ export function AuthBoundary() {
   };
 
   if (sessionQuery.isLoading) return <AuthLoading />;
-  if (signedOut || (sessionQuery.error instanceof ApiError && sessionQuery.error.status === 401)) {
-    return <LoginPage onSignedIn={finishLogin} />;
+  const authError = sessionQuery.error;
+  if (signedOut || authError) {
+    // 401 means the backend is up but we're not signed in. Any other failure
+    // (404 on the static demo, network error) means the backend is unreachable.
+    const backendUnreachable = Boolean(authError) && !(authError instanceof ApiError && authError.status === 401);
+    return <LoginPage onSignedIn={finishLogin} backendUnreachable={backendUnreachable} />;
   }
   if (!sessionQuery.data) {
-    return <AuthLoading error={sessionQuery.error instanceof Error ? sessionQuery.error.message : undefined} />;
+    return <AuthLoading />;
   }
 
   const session = sessionQuery.data;
@@ -75,10 +79,10 @@ export function PermissionRoute({ permission, children }: { permission: Permissi
   return can(permission) ? children : <Navigate to="/" replace />;
 }
 
-function AuthLoading({ error }: { error?: string }) {
+function AuthLoading() {
   return (
     <div style={{ display: "grid", minHeight: "100dvh", placeItems: "center", background: "var(--bg)", color: "var(--text-muted)" }}>
-      <span>{error ?? "Checking session..."}</span>
+      <span>Checking session...</span>
     </div>
   );
 }
