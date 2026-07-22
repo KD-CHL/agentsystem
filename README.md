@@ -239,22 +239,46 @@ curl -sS -X POST http://127.0.0.1:8000/api/v1/approvals/<approval_id>/decisions 
 
 ## Deployment
 
-The React frontend is deployed to **Vercel** and auto-deploys on every push to
-`main` (GitHub ↔ Vercel stay in sync). The FastAPI backend — a long-running
-process with an in-process workflow worker — runs **locally**; the Vercel site
-serves as a static showcase, and the full interactive app is used against the
-local backend.
+The React frontend plus a thin serverless API layer is deployed to **Vercel**
+and auto-deploys on every push to `main` (GitHub ↔ Vercel stay in sync). The
+FastAPI backend — a long-running process with an in-process workflow worker —
+runs **locally**; the Vercel site is a login-capable, read-only demo of real
+synced data, while the full interactive app (task creation, agent runs,
+approval decisions) is used against the local backend.
+
+### Cloud demo
 
 ```text
-Vercel  ──> React SPA (static showcase, auto-deploys from GitHub)
+URL       https://agentsystem-chls-projects-ddde4200.vercel.app
+Username  admin
+Password  k020mRArRChTdqtdJl4j
+```
+
+The demo signs you in with password auth (server-side sessions, Bearer
+tokens) and serves a read-only snapshot of the local instance — tasks,
+approvals, agents, projects, operations, and audit logs. Write operations
+return `501 CLOUD_READ_ONLY`; make changes locally, then refresh the
+snapshot:
+
+```bash
+.venv/bin/python scripts/sync_cloud_data.py
+```
+
+The snapshot lives in a private data repository and is served by a Vercel
+Function (`frontend/api/`). The workflow worker and agent runtime stay local
+because they need a durable long-running process.
+
+```text
+Vercel  ──> React SPA + serverless API (password login + read-only synced data)
 
 Local   ──> Vite dev server :5173 ──(proxy /api/v1)──> FastAPI :8000 ──> SQLite
 ```
 
 Frontend (Vercel): the repo is imported with Root Directory `frontend`;
-`frontend/vercel.json` rewrites all routes to `index.html` for client-side
-routing. `VITE_API_BASE_URL` is left unset locally so requests stay same-origin
-and are proxied by Vite to `127.0.0.1:8000`.
+`frontend/vercel.json` rewrites `/api/*` to the single Vercel Function and
+all other routes to `index.html` for client-side routing. `VITE_API_BASE_URL`
+is left unset locally so requests stay same-origin and are proxied by Vite to
+`127.0.0.1:8000`.
 
 Backend (local): start it from the project root so its relative paths resolve
 (`.venv/bin/agentsystem`), then run the frontend dev server (`npm run dev` in
