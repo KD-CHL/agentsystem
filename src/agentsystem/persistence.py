@@ -232,6 +232,20 @@ class AuthSessionRow(Base):
 PydanticRecord = TypeVar("PydanticRecord")
 
 
+def _normalize_database_url(database_url: str) -> str:
+    """Map provider-supplied PostgreSQL URLs onto the psycopg 3 driver scheme.
+
+    Cloud providers hand out ``postgres://`` or ``postgresql://`` URLs; SQLAlchemy
+    needs an explicit driver (``postgresql+psycopg://``) to use psycopg 3.
+    SQLite and already-qualified URLs pass through unchanged.
+    """
+    if database_url.startswith("postgres://"):
+        return "postgresql+psycopg://" + database_url.removeprefix("postgres://")
+    if database_url.startswith("postgresql://"):
+        return "postgresql+psycopg://" + database_url.removeprefix("postgresql://")
+    return database_url
+
+
 class SQLiteStore(InMemoryStore):
     """Single-process write-through store with durable SQLite recovery.
 
@@ -242,6 +256,7 @@ class SQLiteStore(InMemoryStore):
     def __init__(self, database_url: str) -> None:
         super().__init__()
         self._db_lock = RLock()
+        database_url = _normalize_database_url(database_url)
         if database_url.startswith("sqlite:///"):
             path = Path(database_url.removeprefix("sqlite:///"))
             path.parent.mkdir(parents=True, exist_ok=True)
