@@ -35,5 +35,5 @@ export function kvGet(key) {
 }
 
 export function kvSet(key, value) {
-  return useRedis ? redisSet(key, value) : ghSet(key);
+  return useRedis ? redisSet(key, value) : ghSet(key, value);
 }
