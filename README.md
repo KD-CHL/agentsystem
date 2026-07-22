@@ -237,6 +237,37 @@ curl -sS -X POST http://127.0.0.1:8000/api/v1/approvals/<approval_id>/decisions 
   -d '{"action": "approve", "comment": "Plan approved"}'
 ```
 
+## Deployment
+
+The project is designed to run split across two hosts: the React frontend is
+static and deploys to Vercel, while the FastAPI backend (a long-running process
+with an in-process workflow worker) deploys to Render in front of a managed
+Postgres. SQLite and the embedded console are for local development only.
+
+```text
+Browser ──> Vercel (React SPA, auto-deploys from GitHub)
+   │
+   └── cross-origin fetch (credentials: include) ──> Render (FastAPI + worker)
+                                                        └── managed Postgres
+```
+
+Frontend (Vercel): import the repo, set the Root Directory to `frontend`, and
+set `VITE_API_BASE_URL` to the deployed backend origin. `frontend/vercel.json`
+rewrites all routes to `index.html` for client-side routing.
+
+Backend (Render): the included [`render.yaml`](render.yaml) Blueprint provisions
+the web service and a Postgres database. It runs `alembic upgrade head` before
+serving, binds to Render's injected `$PORT`, and exposes `/health` for health
+checks. Create a Blueprint from the repo in the Render dashboard; you will be
+prompted to set `AGENTSYSTEM_BOOTSTRAP_ADMIN_PASSWORD`, which becomes the admin
+login. Key settings for the cross-origin frontend: `AGENTSYSTEM_AUTH_MODE=local`,
+`AGENTSYSTEM_AUTH_COOKIE_SECURE=true`, `AGENTSYSTEM_AUTH_COOKIE_SAMESITE=none`,
+and `AGENTSYSTEM_CORS_ORIGINS` set to the Vercel origin.
+
+Note the backend is single-instance by design (it loads state into memory and
+writes through to the database), so it must not be horizontally scaled. On
+Render's free tier the service sleeps when idle and takes a moment to warm up.
+
 ## Project Structure
 
 ```text
