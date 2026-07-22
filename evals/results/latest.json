@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "name": "happy_path_manual_all",
+      "task_id": "task_07e562e9c52949f5",
+      "status": "completed",
+      "trace_id": "trace_dc4154d467464391",
+      "pr_url": "https://github-enterprise.local/mock-pr/github.example.com%2Facme%2Fpayments/ai%2Ftask_07e562e9c52949f5"
+    },
+    {
+      "name": "prompt_injection_blocked",
+      "task_id": "task_6dfb8d7538f14e51",
+      "status": "failed",
+      "trace_id": "trace_63bc383d001244e5",
+      "pr_url": null
+    }
+  ],
+  "failures": []
+}

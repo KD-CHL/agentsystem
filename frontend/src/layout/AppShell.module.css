@@ -1,0 +1,340 @@
+.shell {
+  display: grid;
+  width: 100vw;
+  height: 100dvh;
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
+  grid-template-rows: var(--header-height) minmax(0, 1fr);
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.header {
+  z-index: 20;
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  grid-column: 1 / -1;
+  gap: 22px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.brand {
+  display: flex;
+  width: 220px;
+  height: 100%;
+  align-items: center;
+  gap: 10px;
+  padding: 0 18px;
+  border-right: 1px solid var(--border);
+}
+
+.brandMark {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 70%, var(--border));
+  border-radius: var(--radius-sm);
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.brandText {
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 760;
+  white-space: nowrap;
+}
+
+.brandText span {
+  color: var(--accent-strong);
+}
+
+.headerContext {
+  display: flex;
+  min-width: 0;
+  align-items: baseline;
+  gap: 9px;
+}
+
+.headerContext strong {
+  max-width: 220px;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.contextLabel {
+  color: var(--text-faint);
+  font-size: 12px;
+}
+
+.headerActions {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-right: 14px;
+}
+
+.modeBadge,
+.workerState {
+  display: inline-flex;
+  height: 30px;
+  align-items: center;
+  gap: 7px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--panel);
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.modeBadge {
+  color: var(--green);
+}
+
+.modeBadge[data-mode="live"] {
+  color: var(--cyan);
+}
+
+.modeBadge[data-mode="mixed"] {
+  color: var(--yellow);
+}
+
+.modeDot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px color-mix(in srgb, currentColor 68%, transparent);
+}
+
+.iconButton,
+.primaryAction {
+  display: inline-flex;
+  height: 34px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--panel);
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.iconButton {
+  width: 34px;
+}
+
+.iconButton:hover,
+.primaryAction:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.primaryAction {
+  gap: 7px;
+  padding: 0 13px;
+  border-color: var(--accent);
+  color: #fff;
+  background: var(--accent-action);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.primaryAction:hover {
+  border-color: var(--accent-strong);
+  color: #fff;
+  background: var(--accent-action-hover);
+}
+
+.avatar {
+  display: grid;
+  width: 32px;
+  height: 32px;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--text);
+  background: var(--bg-subtle);
+  font-size: 10px;
+  font-weight: 750;
+}
+
+.accountWrap {
+  position: relative;
+}
+
+.accountMenu {
+  position: absolute;
+  top: 40px;
+  right: 0;
+  z-index: 40;
+  width: 210px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: var(--shadow);
+}
+
+.accountMenu > div {
+  padding: 11px 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.accountMenu strong,
+.accountMenu small {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.accountMenu strong { font-size: 10px; }
+.accountMenu small { margin-top: 4px; color: var(--text-faint); font-size: 8px; text-transform: capitalize; }
+.accountMenu button { display: flex; width: 100%; min-height: 34px; align-items: center; gap: 8px; padding: 0 12px; color: var(--text-muted); font-size: 9px; text-align: left; }
+.accountMenu button:hover { color: var(--red); background: var(--red-soft); }
+
+.rail {
+  z-index: 15;
+  min-height: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg-elevated);
+}
+
+.railItems {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  gap: 5px;
+  padding: 12px 8px;
+}
+
+.navItem {
+  position: relative;
+  display: flex;
+  width: 50px;
+  min-height: 48px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  font-size: 9px;
+  transition: color var(--transition), background var(--transition), border-color var(--transition);
+}
+
+.navItem:hover {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.navItem.active {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--border));
+  color: var(--accent-strong);
+  background: var(--accent-soft);
+}
+
+.navItem.active::before {
+  position: absolute;
+  left: -9px;
+  width: 3px;
+  height: 24px;
+  border-radius: 0 3px 3px 0;
+  background: var(--accent);
+  content: "";
+}
+
+.main {
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .primaryAction span {
+    display: none;
+  }
+
+  .primaryAction {
+    width: 34px;
+    padding: 0;
+  }
+}
+
+@media (max-width: 760px) {
+  .shell {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: var(--header-height) minmax(0, 1fr) 58px;
+  }
+
+  .header {
+    gap: 8px;
+  }
+
+  .brand {
+    width: auto;
+    padding: 0 10px;
+    border-right: 0;
+  }
+
+  .brandText,
+  .headerContext,
+  .workerState,
+  .accountWrap {
+    display: none;
+  }
+
+  .headerActions {
+    padding-right: 8px;
+  }
+
+  .rail {
+    grid-row: 3;
+    border-top: 1px solid var(--border);
+    border-right: 0;
+  }
+
+  .railItems {
+    width: 100%;
+    max-width: 520px;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    margin: 0 auto;
+    padding: 4px 6px;
+    overflow: hidden;
+  }
+
+  .navItem {
+    width: auto;
+    min-width: 44px;
+    flex: 1 1 0;
+    min-height: 48px;
+  }
+
+  .navItem.active::before {
+    top: -5px;
+    left: 50%;
+    width: 24px;
+    height: 3px;
+    transform: translateX(-50%);
+    border-radius: 0 0 3px 3px;
+  }
+
+  .main {
+    grid-row: 2;
+  }
+}

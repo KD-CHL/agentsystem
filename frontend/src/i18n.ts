@@ -1,0 +1,95 @@
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
+import { safeStorage } from "./lib/storage";
+
+export const LANGUAGE_KEY = "agentsystem-language";
+
+const resources = {
+  zh: {
+    translation: {
+      nav: { workbench: "工作台", tasks: "任务", projects: "项目", agents: "Agent", capabilities: "能力", operations: "运营", users: "用户", settings: "设置" },
+      common: { simulated: "模拟模式", live: "真实 API", mixed: "混合模式", running: "运行中", idle: "空闲", save: "保存", cancel: "取消", close: "关闭", refresh: "刷新", validate: "验证配置", noData: "暂无数据" },
+      workbench: { title: "代码协作工作台", newTask: "新建任务", taskQueue: "任务队列", searchTasks: "搜索任务、仓库或编号", agents: "Agent 阵容", eventStream: "事件控制台", overview: "概览", artifacts: "产物", trace: "Trace", chat: "协作对话", send: "发送", selectTask: "选择一个任务查看协作进度", currentBlocker: "当前阻塞", nextAction: "下一动作" },
+      task: { queued: "已排队", running: "运行中", awaiting_approval: "等待审批", input_required: "需要输入", completed: "已完成", canceled: "已取消", failed: "失败", approve: "批准", reject: "拒绝", requestChanges: "要求修改", rerun: "重新运行", stop: "取消任务" },
+      drawer: { title: "创建协作任务", project: "选择项目", requirement: "描述需求", policy: "运行策略", next: "下一步", back: "上一步", create: "创建并运行", projectHint: "任务只会操作独立副本，不会直接修改源目录。", promptLabel: "需要 Agent 协作完成什么？", promptPlaceholder: "例如：修复重试逻辑并补充单元测试", approval: "审批策略", priority: "优先级", manualPlan: "计划审批", manualAll: "关键阶段审批", auto: "自动推进" },
+      projects: { title: "本地项目", add: "选择项目目录", files: "项目文件", preview: "文件预览", empty: "尚未添加本地项目" },
+      agents: { title: "Agent Studio", subtitle: "为每个 Agent 独立选择服务商、模型、API 协议和安全凭据。", providerConfigured: "按 Agent 路由模型", provider: "服务商", model: "模型", endpoint: "Base URL", credential: "凭据引用", timeout: "超时（秒）", maxOutputTokens: "最大输出 Token", budget: "预算上限", mode: "调用模式", apiFormat: "API 协议", apiKeyEnv: "API key 环境变量", saved: "配置已保存", valid: "配置验证通过", customProviderHelp: "使用自定义 OpenAI-compatible 模型网关。", selectCredential: "请选择凭据", noCredential: "无需凭据", credentialVault: "安全凭据", credentialHelp: "密钥只写入 macOS 钥匙串，数据库、响应和 Trace 不保存明文。", addCredential: "添加凭据", credentialName: "凭据名称", apiKey: "API key", showKey: "显示密钥", hideKey: "隐藏密钥", storeCredential: "安全保存", credentialAvailable: "凭据可用", credentialMissing: "凭据缺失", deleteCredential: "删除凭据", deleteCredentialConfirm: "确定删除凭据 {{name}} 吗？", credentialStored: "凭据 {{name}} 已安全保存", credentialDeleted: "凭据 {{name}} 已删除", modelDiscovery: "获取模型", modelsFound: "发现 {{count}} 个可用模型", localConsole: "本地审计", consoleEmpty: "配置保存、连接验证和模型发现结果会显示在这里。" },
+      capabilities: {
+        title: "能力中心", subtitle: "注册 MCP 服务与本地 Skill，并精确绑定到需要它们的 Agent。", safeRegistry: "租户隔离能力注册表",
+        mcp: "MCP 服务", skills: "Skills", addServer: "添加服务", importSkill: "选择 Skill 目录", newServer: "新建 MCP 服务", noMcp: "尚未配置 MCP 服务", noSkills: "尚未导入 Skill",
+        serverConfiguration: "服务配置", skillDetails: "Skill 详情", agentBindings: "Agent 绑定", bindingsHelp: "只向选中的 Agent 提供当前能力。", boundCount: "已绑定 {{count}} 个 Agent",
+        name: "名称", description: "描述", transport: "传输方式", endpoint: "服务地址", command: "启动命令", arguments: "命令参数", argumentsHelp: "每行一个参数，不通过 Shell 执行。", credential: "凭据引用", noCredential: "不使用凭据", credentialHeader: "认证 Header", credentialScheme: "认证前缀", credentialEnv: "凭据环境变量", timeout: "连接超时（秒）", approvalPolicy: "工具审批", alwaysApprove: "每次调用需审批", directInvoke: "允许直接调用", toolAllowlist: "工具允许列表", toolAllowlistHelp: "每行一个工具名；留空表示使用服务返回的全部工具。", enabled: "启用", enabledHelp: "只有启用且验证通过的能力才会进入 Agent 上下文。",
+        createServer: "创建服务", validateServer: "连接并发现工具", deleteServer: "删除服务", deleteServerConfirm: "确定删除 MCP 服务 {{name}} 吗？所有 Agent 绑定也会移除。", serverCreated: "MCP 服务已创建", serverSaved: "MCP 服务配置已保存", serverDeleted: "MCP 服务已删除", validationPassed: "连接成功，发现 {{count}} 个工具", tools: "工具目录", noTools: "验证连接后将在此显示工具。",
+        source: "来源目录", hash: "内容哈希", version: "版本", instructions: "指令预览", refreshSkill: "重新载入", deleteSkill: "删除 Skill", deleteSkillConfirm: "确定删除 Skill {{name}} 吗？所有 Agent 绑定也会移除。", skillImported: "Skill 已导入", skillRefreshed: "Skill 已重新载入", skillDeleted: "Skill 已删除", folderCanceled: "未选择目录",
+        policy: "执行策略", networkAllowed: "HTTP MCP 已启用", networkBlocked: "HTTP MCP 已禁用", stdioAllowed: "stdio 已启用", stdioBlocked: "stdio 默认禁用", allowedHosts: "允许主机", allowedRoots: "Skill 允许目录", localCredentialHelp: "MCP 密钥复用系统钥匙串凭据，接口与数据库只保存引用。",
+        status: { untested: "未验证", ready: "可用", error: "连接错误", blocked: "策略阻止" }, bindingSaved: "Agent 绑定已更新", selectItem: "选择一个能力查看配置与绑定", creating: "创建中", saving: "保存中",
+      },
+      operations: { title: "运营与治理", tasks: "任务总数", completion: "完成任务", approvals: "等待审批", failures: "失败任务", audit: "最近活动" },
+      settings: {
+        title: "系统设置", subtitle: "管理此浏览器的界面偏好，并检查当前工作区的运行与安全状态。", sections: "设置分区",
+        autoSave: "自动保存", loadingStatus: "读取状态", savedLocally: "已保存到此浏览器",
+        interface: "界面偏好", interfaceNavHelp: "主题与语言", interfaceHelp: "这些偏好仅保存在当前浏览器，并立即应用。",
+        appearance: "外观", theme: "界面主题", themeHelp: "选择适合当前环境的显示方式。", dark: "深色", darkHelp: "低光环境", light: "浅色", lightHelp: "明亮环境", system: "跟随系统", systemHelp: "自动切换",
+        language: "界面语言", languageHelp: "切换工作台导航、状态和操作文案。", chinese: "中文", english: "English",
+        runtimeSecurity: "执行与安全", runtimeNavHelp: "模型、Worker 与隔离", runtimeSecurityHelp: "集中查看服务端运行状态和不可绕过的本地安全边界。", runtimeSummary: "运行状态摘要",
+        execution: "模型执行", executionMode: "执行模式", executionModeHelp: "由各 Agent 的调用模式汇总", agentRouting: "Agent 路由", agentRoutingValue: "{{live}} 真实 · {{simulated}} 模拟", workflowWorker: "任务 Worker", workerRunningHelp: "正在领取并执行后台任务", workerIdleHelp: "当前未启动后台执行进程", statusUnavailable: "暂时无法读取服务状态",
+        providerExecution: "按 Agent 配置执行", providerExecutionHelp: "每个 Agent 独立选择服务商、模型、API 协议和安全凭据。", openAgentStudio: "打开 Agent Studio", readOnly: "只读",
+        workspaceIsolation: "任务工作区隔离", workspaceIsolationHelp: "代码修改只发生在任务副本中，不直接写入源项目目录。", enforced: "已启用",
+        credentialSecurity: "凭据安全", credentialSecurityHelp: "密钥明文不会进入数据库、接口响应、日志或 Trace。", keychain: "系统钥匙串",
+        account: "账户与会话", accountNavHelp: "身份与访问权限", identity: "身份与会话", identityHelp: "当前身份由服务端验证，角色决定可查看和执行的操作。",
+        tenant: "租户", role: "角色", authMode: "认证模式", version: "系统版本", sessionProtected: "受保护的服务端会话", sessionProtectedHelp: "会话凭据仅存在于 HttpOnly Cookie，不写入浏览器存储。", manageUsers: "管理用户", signingOut: "正在退出", signOutFailed: "退出登录失败，请重试。",
+        localFirst: "本地优先", localFirstHelp: "项目代码和运行数据默认留在当前设备。",
+      },
+      auth: { privateWorkspace: "私有多 Agent 代码协作", secureSession: "安全会话", signIn: "登录工作台", signingIn: "正在登录", signInHelp: "使用管理员创建的本地账户进入工作台。", username: "用户名", password: "密码", cookieNotice: "会话凭据仅保存在 HttpOnly Cookie 中，不写入浏览器存储。", accountMenu: "账户菜单", signOut: "退出登录" },
+      users: { title: "用户与权限", subtitle: "管理本租户成员、角色和账户状态。", add: "添加成员", passwordRule: "初始密码至少 12 个字符", displayName: "显示名称", role: "角色", create: "创建用户", directory: "用户目录", user: "用户", status: "状态", lastLogin: "最近登录", devIdentity: "开发身份由服务端托管", devIdentityHelp: "将 AGENTSYSTEM_AUTH_MODE 切换为 local 后可创建和管理用户。" },
+    },
+  },
+  en: {
+    translation: {
+      nav: { workbench: "Workbench", tasks: "Tasks", projects: "Projects", agents: "Agents", capabilities: "Capabilities", operations: "Operations", users: "Users", settings: "Settings" },
+      common: { simulated: "Simulated", live: "Live API", mixed: "Mixed mode", running: "Running", idle: "Idle", save: "Save", cancel: "Cancel", close: "Close", refresh: "Refresh", validate: "Validate", noData: "No data" },
+      workbench: { title: "Code Collaboration Workbench", newTask: "New task", taskQueue: "Task queue", searchTasks: "Search task, repository, or ID", agents: "Agent roster", eventStream: "Event console", overview: "Overview", artifacts: "Artifacts", trace: "Trace", chat: "Collaboration chat", send: "Send", selectTask: "Select a task to inspect its progress", currentBlocker: "Current blocker", nextAction: "Next action" },
+      task: { queued: "Queued", running: "Running", awaiting_approval: "Awaiting approval", input_required: "Input required", completed: "Completed", canceled: "Canceled", failed: "Failed", approve: "Approve", reject: "Reject", requestChanges: "Request changes", rerun: "Run again", stop: "Cancel task" },
+      drawer: { title: "Create collaboration task", project: "Choose project", requirement: "Describe work", policy: "Run policy", next: "Next", back: "Back", create: "Create and run", projectHint: "Agents work in an isolated copy and never edit the source folder directly.", promptLabel: "What should the agents accomplish?", promptPlaceholder: "For example: fix retry handling and add unit tests", approval: "Approval policy", priority: "Priority", manualPlan: "Plan approval", manualAll: "Key-stage approvals", auto: "Automatic" },
+      projects: { title: "Local projects", add: "Choose project folder", files: "Project files", preview: "File preview", empty: "No local project has been added" },
+      agents: { title: "Agent Studio", subtitle: "Choose a provider, model, API format, and secure credential independently for every agent.", providerConfigured: "Per-agent model routing", provider: "Provider", model: "Model", endpoint: "Base URL", credential: "Credential reference", timeout: "Timeout (seconds)", maxOutputTokens: "Max output tokens", budget: "Budget limit", mode: "Call mode", apiFormat: "API format", apiKeyEnv: "API key environment variable", saved: "Configuration saved", valid: "Configuration validated", customProviderHelp: "Use a custom OpenAI-compatible model gateway.", selectCredential: "Choose a credential", noCredential: "No credential required", credentialVault: "Secure credentials", credentialHelp: "Keys are written only to macOS Keychain; plaintext never enters the database, responses, or traces.", addCredential: "Add credential", credentialName: "Credential name", apiKey: "API key", showKey: "Show key", hideKey: "Hide key", storeCredential: "Store securely", credentialAvailable: "Credential available", credentialMissing: "Credential missing", deleteCredential: "Delete credential", deleteCredentialConfirm: "Delete credential {{name}}?", credentialStored: "Credential {{name}} stored securely", credentialDeleted: "Credential {{name}} deleted", modelDiscovery: "Fetch models", modelsFound: "Found {{count}} available models", localConsole: "Local audit", consoleEmpty: "Configuration, connection, and model discovery events appear here." },
+      capabilities: {
+        title: "Capability center", subtitle: "Register MCP servers and local Skills, then bind them only to the agents that need them.", safeRegistry: "Tenant-isolated capability registry",
+        mcp: "MCP servers", skills: "Skills", addServer: "Add server", importSkill: "Choose Skill folder", newServer: "New MCP server", noMcp: "No MCP servers configured", noSkills: "No Skills imported",
+        serverConfiguration: "Server configuration", skillDetails: "Skill details", agentBindings: "Agent bindings", bindingsHelp: "Expose the selected capability only to checked agents.", boundCount: "Bound to {{count}} agents",
+        name: "Name", description: "Description", transport: "Transport", endpoint: "Server URL", command: "Launch command", arguments: "Command arguments", argumentsHelp: "One argument per line. No shell is used.", credential: "Credential reference", noCredential: "No credential", credentialHeader: "Auth header", credentialScheme: "Auth scheme", credentialEnv: "Credential environment variable", timeout: "Connection timeout (seconds)", approvalPolicy: "Tool approval", alwaysApprove: "Approval for every call", directInvoke: "Allow direct invocation", toolAllowlist: "Tool allowlist", toolAllowlistHelp: "One tool name per line. Leave empty to use all advertised tools.", enabled: "Enabled", enabledHelp: "Only enabled and validated capabilities enter Agent context.",
+        createServer: "Create server", validateServer: "Connect and discover tools", deleteServer: "Delete server", deleteServerConfirm: "Delete MCP server {{name}}? All Agent bindings will also be removed.", serverCreated: "MCP server created", serverSaved: "MCP server configuration saved", serverDeleted: "MCP server deleted", validationPassed: "Connected and found {{count}} tools", tools: "Tool catalog", noTools: "Validate the connection to populate this catalog.",
+        source: "Source folder", hash: "Content hash", version: "Version", instructions: "Instruction preview", refreshSkill: "Reload", deleteSkill: "Delete Skill", deleteSkillConfirm: "Delete Skill {{name}}? All Agent bindings will also be removed.", skillImported: "Skill imported", skillRefreshed: "Skill reloaded", skillDeleted: "Skill deleted", folderCanceled: "No folder selected",
+        policy: "Execution policy", networkAllowed: "HTTP MCP enabled", networkBlocked: "HTTP MCP disabled", stdioAllowed: "stdio enabled", stdioBlocked: "stdio disabled by default", allowedHosts: "Allowed hosts", allowedRoots: "Allowed Skill roots", localCredentialHelp: "MCP secrets reuse Keychain credentials; APIs and the database store references only.",
+        status: { untested: "Untested", ready: "Ready", error: "Connection error", blocked: "Policy blocked" }, bindingSaved: "Agent binding updated", selectItem: "Select a capability to inspect configuration and bindings", creating: "Creating", saving: "Saving",
+      },
+      operations: { title: "Operations & Governance", tasks: "All tasks", completion: "Completed", approvals: "Awaiting approval", failures: "Failed", audit: "Recent activity" },
+      settings: {
+        title: "System settings", subtitle: "Manage browser preferences and inspect the workspace runtime and security posture.", sections: "Settings sections",
+        autoSave: "Auto-save", loadingStatus: "Loading status", savedLocally: "Saved to this browser",
+        interface: "Interface preferences", interfaceNavHelp: "Theme and language", interfaceHelp: "These preferences stay in this browser and apply immediately.",
+        appearance: "Appearance", theme: "Theme", themeHelp: "Choose the display mode that fits your environment.", dark: "Dark", darkHelp: "Low-light spaces", light: "Light", lightHelp: "Bright spaces", system: "System", systemHelp: "Switch automatically",
+        language: "Language", languageHelp: "Change navigation, status, and action labels across the workspace.", chinese: "中文", english: "English",
+        runtimeSecurity: "Runtime & security", runtimeNavHelp: "Models, worker, isolation", runtimeSecurityHelp: "Inspect server runtime state and the local safety boundaries that cannot be bypassed.", runtimeSummary: "Runtime status summary",
+        execution: "Model execution", executionMode: "Execution mode", executionModeHelp: "Aggregated from each agent call mode", agentRouting: "Agent routing", agentRoutingValue: "{{live}} live · {{simulated}} simulated", workflowWorker: "Workflow worker", workerRunningHelp: "Claiming and executing background jobs", workerIdleHelp: "No background worker is currently running", statusUnavailable: "Service status is temporarily unavailable",
+        providerExecution: "Per-agent configured execution", providerExecutionHelp: "Each agent independently selects its provider, model, API format, and secure credential.", openAgentStudio: "Open Agent Studio", readOnly: "Read only",
+        workspaceIsolation: "Task workspace isolation", workspaceIsolationHelp: "Code changes stay in a task copy and never write directly to the source project.", enforced: "Enforced",
+        credentialSecurity: "Credential security", credentialSecurityHelp: "Plaintext keys never enter the database, API responses, logs, or traces.", keychain: "System Keychain",
+        account: "Account & session", accountNavHelp: "Identity and access", identity: "Identity & session", identityHelp: "The server verifies this identity, and its role controls visible and available actions.",
+        tenant: "Tenant", role: "Role", authMode: "Auth mode", version: "System version", sessionProtected: "Protected server session", sessionProtectedHelp: "Session credentials stay in an HttpOnly cookie and never enter browser storage.", manageUsers: "Manage users", signingOut: "Signing out", signOutFailed: "Sign out failed. Please try again.",
+        localFirst: "Local first", localFirstHelp: "Project code and runtime data remain on this device by default.",
+      },
+      auth: { privateWorkspace: "Private multi-agent code collaboration", secureSession: "Secure session", signIn: "Sign in to workspace", signingIn: "Signing in", signInHelp: "Use a local account created by an administrator.", username: "Username", password: "Password", cookieNotice: "Session credentials stay in an HttpOnly cookie and never enter browser storage.", accountMenu: "Account menu", signOut: "Sign out" },
+      users: { title: "Users & permissions", subtitle: "Manage tenant members, roles, and account status.", add: "Add member", passwordRule: "Initial passwords require at least 12 characters", displayName: "Display name", role: "Role", create: "Create user", directory: "User directory", user: "User", status: "Status", lastLogin: "Last login", devIdentity: "Development identity is server managed", devIdentityHelp: "Switch AGENTSYSTEM_AUTH_MODE to local to create and manage users." },
+    },
+  },
+};
+
+void i18n.use(initReactI18next).init({
+  resources,
+  lng: safeStorage.get(LANGUAGE_KEY) ?? "zh",
+  fallbackLng: "zh",
+  interpolation: { escapeValue: false },
+});
+
+export default i18n;
