@@ -3,37 +3,22 @@ import { useQuery } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
   Activity,
-  Bot,
   Boxes,
-  Cable,
-  FolderGit2,
-  LayoutDashboard,
-  Moon,
   LogOut,
+  Moon,
   Plus,
-  Settings,
+  Search,
   Sun,
-  UsersRound,
-  Workflow,
 } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 
+import { CommandPalette } from "../components/CommandPalette";
 import { NewTaskDrawer } from "../components/NewTaskDrawer";
 import { useAuth } from "../auth/AuthContext";
 import { api } from "../lib/api";
 import { applyTheme, getThemePreference, setThemePreference, THEME_CHANGE_EVENT, type ThemePreference } from "../lib/theme";
+import { navItems } from "./navItems";
 import styles from "./AppShell.module.css";
-
-const navItems = [
-  { to: "/", icon: LayoutDashboard, key: "workbench", permission: "task:read", end: true },
-  { to: "/tasks", icon: Workflow, key: "tasks", permission: "task:read" },
-  { to: "/projects", icon: FolderGit2, key: "projects", permission: "project:read" },
-  { to: "/agents", icon: Bot, key: "agents", permission: "agent:manage" },
-  { to: "/capabilities", icon: Cable, key: "capabilities", permission: "agent:manage" },
-  { to: "/operations", icon: Activity, key: "operations", permission: "operations:read" },
-  { to: "/users", icon: UsersRound, key: "users", permission: "user:manage" },
-  { to: "/settings", icon: Settings, key: "settings" },
-] as const;
 
 export function AppShell() {
   const { t } = useTranslation();
@@ -41,6 +26,7 @@ export function AppShell() {
   const navigate = useNavigate();
   const location = useLocation();
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [paletteOpen, setPaletteOpen] = useState(false);
   const [theme, setTheme] = useState(getThemePreference());
   const [accountOpen, setAccountOpen] = useState(false);
   const { data: system } = useQuery({ queryKey: ["system"], queryFn: api.system, refetchInterval: 5_000 });
@@ -52,6 +38,16 @@ export function AppShell() {
     const syncTheme = (event: Event) => setTheme((event as CustomEvent<ThemePreference>).detail);
     window.addEventListener(THEME_CHANGE_EVENT, syncTheme);
     return () => window.removeEventListener(THEME_CHANGE_EVENT, syncTheme);
+  }, []);
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setPaletteOpen((value) => !value);
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
   }, []);
 
   const toggleTheme = () => {
@@ -82,6 +78,11 @@ export function AppShell() {
             <Activity size={14} />
             {system?.worker_running ? t("common.running") : t("common.idle")}
           </span>
+          <button className={styles.searchButton} type="button" onClick={() => setPaletteOpen(true)} aria-label={t("palette.open")} title={t("palette.open")}>
+            <Search size={15} />
+            <span className={styles.searchLabel}>{t("palette.search")}</span>
+            <kbd>⌘K</kbd>
+          </button>
           <button className={styles.iconButton} type="button" onClick={toggleTheme} title={document.documentElement.dataset.theme === "dark" ? t("settings.light") : t("settings.dark")} aria-label={t("settings.theme")} data-preference={theme}>
             {document.documentElement.dataset.theme === "dark" ? <Sun size={17} /> : <Moon size={17} />}
           </button>
@@ -105,9 +106,8 @@ export function AppShell() {
 
       <nav className={styles.rail} aria-label="Primary">
         <div className={styles.railItems}>
-          {navItems.filter((item) => !("permission" in item) || can(item.permission)).map((item) => {
-            const { to, icon: Icon, key } = item;
-            const end = "end" in item ? item.end : false;
+          {navItems.filter((item) => !item.permission || can(item.permission)).map((item) => {
+            const { to, icon: Icon, key, end = false } = item;
             return (
             <NavLink
               key={key}
@@ -137,6 +137,8 @@ export function AppShell() {
           navigate(`/tasks/${taskId}`);
         }}
       />
+
+      <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
 }

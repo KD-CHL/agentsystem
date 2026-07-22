@@ -151,7 +151,7 @@ export function NewTaskDrawer({ open, onClose, onCreated }: Props) {
                 <FolderOpen size={16} />
                 {t("projects.add")}
               </button>
-              {form.formState.errors.projectId && <p className={styles.error}>请选择一个项目。</p>}
+              {form.formState.errors.projectId && <p className={styles.error}>{t("drawer.selectProject")}</p>}
               {pickerError && <p className={styles.error}>{pickerError}</p>}
             </div>
           )}

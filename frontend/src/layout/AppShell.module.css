@@ -113,7 +113,6 @@
   height: 6px;
   border-radius: 50%;
   background: currentColor;
-  box-shadow: 0 0 8px color-mix(in srgb, currentColor 68%, transparent);
 }
 
 .iconButton,
@@ -138,6 +137,52 @@
   border-color: var(--border-strong);
   color: var(--text);
   background: var(--bg-hover);
+}
+
+.searchButton {
+  display: inline-flex;
+  width: auto;
+  height: 34px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-faint);
+  background: var(--panel);
+  font-size: 12px;
+  transition: background var(--transition), color var(--transition), border-color var(--transition);
+}
+
+.searchButton:hover {
+  border-color: var(--border-strong);
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.searchButton kbd {
+  padding: 2px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  color: var(--text-faint);
+  font-family: var(--font-sans);
+  font-size: 10px;
+  font-weight: 600;
+  line-height: 1;
+}
+
+@media (max-width: 900px) {
+  .searchButton kbd,
+  .searchButton .searchLabel {
+    display: none;
+  }
+
+  .searchButton {
+    width: 34px;
+    padding: 0;
+    justify-content: center;
+  }
 }
 
 .primaryAction {

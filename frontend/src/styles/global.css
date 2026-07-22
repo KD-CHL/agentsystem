@@ -19,8 +19,10 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   font-size: 14px;
+  font-feature-settings: "cv11", "ss01";
   letter-spacing: 0;
   text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
 }
 
 button,
@@ -45,7 +47,7 @@ a:focus-visible,
 select:focus-visible,
 input:focus-visible,
 textarea:focus-visible {
-  box-shadow: 0 0 0 2px var(--bg), 0 0 0 4px var(--accent);
+  box-shadow: var(--focus-ring);
 }
 
 button {
@@ -64,19 +66,26 @@ a {
 }
 
 code,
-pre {
+pre,
+time,
+.tabular {
   font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent) 32%, transparent);
 }
 
 ::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
+  width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  border: 3px solid transparent;
+  border: 2px solid transparent;
   border-radius: 6px;
-  background: var(--border-strong);
+  background: color-mix(in srgb, var(--border-strong) 80%, transparent);
   background-clip: padding-box;
 }
 

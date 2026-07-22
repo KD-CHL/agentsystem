@@ -282,35 +282,6 @@
   white-space: nowrap;
 }
 
-.statusBadge {
-  display: inline-flex;
-  height: 22px;
-  align-items: center;
-  gap: 5px;
-  padding: 0 7px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  color: var(--text-muted);
-  background: var(--panel);
-  font-size: 9px;
-  font-weight: 700;
-  text-transform: uppercase;
-}
-
-.statusBadge i {
-  width: 5px;
-  height: 5px;
-  border-radius: 50%;
-  background: currentColor;
-}
-
-.badge_running,
-.badge_queued { color: var(--cyan); }
-.badge_awaiting_approval,
-.badge_input_required { color: var(--yellow); }
-.badge_completed { color: var(--green); }
-.badge_failed { color: var(--red); }
-
 .taskActions {
   display: flex;
   flex: 0 0 auto;

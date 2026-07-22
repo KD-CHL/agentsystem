@@ -1,10 +1,12 @@
 import { lazy, Suspense, type ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 import { Navigate, Route, Routes } from "react-router-dom";
 
 import { AuthBoundary, PermissionRoute } from "./auth/AuthContext";
 import { AppShell } from "./layout/AppShell";
 
 const AgentStudioPage = lazy(() => import("./pages/AgentStudioPage").then((module) => ({ default: module.AgentStudioPage })));
+const ApprovalsPage = lazy(() => import("./pages/ApprovalsPage").then((module) => ({ default: module.ApprovalsPage })));
 const CapabilitiesPage = lazy(() => import("./pages/CapabilitiesPage").then((module) => ({ default: module.CapabilitiesPage })));
 const OperationsPage = lazy(() => import("./pages/OperationsPage").then((module) => ({ default: module.OperationsPage })));
 const ProjectsPage = lazy(() => import("./pages/ProjectsPage").then((module) => ({ default: module.ProjectsPage })));
@@ -24,6 +26,7 @@ export default function App() {
           <Route path="agents" element={<PermissionRoute permission="agent:manage"><Page><AgentStudioPage /></Page></PermissionRoute>} />
           <Route path="capabilities" element={<PermissionRoute permission="agent:manage"><Page><CapabilitiesPage /></Page></PermissionRoute>} />
           <Route path="operations" element={<PermissionRoute permission="operations:read"><Page><OperationsPage /></Page></PermissionRoute>} />
+          <Route path="approvals" element={<PermissionRoute permission="approval:decide"><Page><ApprovalsPage /></Page></PermissionRoute>} />
           <Route path="users" element={<PermissionRoute permission="user:manage"><Page><UsersPage /></Page></PermissionRoute>} />
           <Route path="settings" element={<Page><SettingsPage /></Page>} />
           <Route path="*" element={<Navigate to="/" replace />} />
@@ -34,5 +37,10 @@ export default function App() {
 }
 
 function Page({ children }: { children: ReactNode }) {
-  return <Suspense fallback={<div style={{ display: "grid", height: "100%", placeItems: "center", color: "var(--text-muted)" }}>Loading...</div>}>{children}</Suspense>;
+  return <Suspense fallback={<PageFallback />}>{children}</Suspense>;
+}
+
+function PageFallback() {
+  const { t } = useTranslation();
+  return <div style={{ display: "grid", height: "100%", placeItems: "center", color: "var(--text-muted)" }}>{t("common.loading")}</div>;
 }

@@ -1,0 +1,89 @@
+.card {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  min-height: 260px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--panel);
+  overflow: hidden;
+}
+
+.cardHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 13px 14px 8px;
+}
+
+.cardHeader strong {
+  display: block;
+  font-size: 11px;
+}
+
+.cardHeader small {
+  display: block;
+  margin-top: 3px;
+  color: var(--text-faint);
+  font-size: 9px;
+}
+
+.viewToggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+
+.viewToggle button {
+  display: inline-flex;
+  height: 24px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 8px;
+  color: var(--text-faint);
+  background: transparent;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.viewToggle button[data-active="true"] {
+  color: var(--text);
+  background: var(--bg-hover);
+}
+
+.cardBody {
+  min-height: 0;
+  padding: 4px 8px 10px;
+}
+
+.tableWrap {
+  max-height: 210px;
+  margin: 0 6px;
+  overflow: auto;
+}
+
+.tableWrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9px;
+}
+
+.tableWrap th,
+.tableWrap td {
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  color: var(--text-muted);
+}
+
+.tableWrap th {
+  color: var(--text-faint);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.tableWrap td {
+  font-variant-numeric: tabular-nums;
+}

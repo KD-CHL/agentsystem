@@ -716,6 +716,32 @@
 .metric small { color: var(--text-muted); font-size: 9px; }
 .metric strong { margin-top: 4px; font-size: 24px; }
 
+.chartGrid {
+  display: grid;
+  margin-bottom: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 9px;
+}
+
+.chartSpan2 {
+  grid-column: span 2;
+  min-width: 0;
+}
+
+.chartGrid > :not(.chartSpan2) {
+  min-width: 0;
+}
+
+@media (max-width: 1100px) {
+  .chartGrid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .chartSpan2 { grid-column: span 2; }
+}
+
+@media (max-width: 720px) {
+  .chartGrid { grid-template-columns: minmax(0, 1fr); }
+  .chartSpan2 { grid-column: span 1; }
+}
+
 .operationsTable,
 .rulesPanel {
   margin-bottom: 14px;

@@ -108,6 +108,22 @@ export interface Approval {
   comment: string | null;
 }
 
+export type ApprovalType = "plan" | "push_branch" | "create_pr" | "high_risk_change";
+export type ApprovalStatus = "awaiting_approval" | "completed" | "failed" | "canceled";
+export type ApprovalAction = "approve" | "reject" | "changes_requested";
+
+export interface ApprovalRecord {
+  id: string;
+  task_id: string;
+  approval_type: ApprovalType;
+  status: ApprovalStatus;
+  reason: string;
+  requested_at: string;
+  decided_at: string | null;
+  decided_by: string | null;
+  comment: string | null;
+}
+
 export interface Artifact {
   id: string;
   task_id: string;

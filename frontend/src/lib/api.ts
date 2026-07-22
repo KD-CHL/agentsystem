@@ -3,6 +3,7 @@ import type {
   AgentCapabilitySet,
   AgentName,
   AgentSummary,
+  ApprovalRecord,
   AuditLog,
   AuthSession,
   ApiErrorBody,
@@ -131,6 +132,8 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ reason: "Started from workspace" }),
     }),
+  approvals: (filters: { task_id?: string; status?: string } = {}) =>
+    request<ApprovalRecord[]>(`/api/v1/approvals${queryString(filters)}`),
   decideApproval: (approvalId: string, action: "approve" | "reject" | "changes_requested", comment?: string) =>
     request<TaskView>(`/api/v1/approvals/${approvalId}/decisions`, {
       method: "POST",

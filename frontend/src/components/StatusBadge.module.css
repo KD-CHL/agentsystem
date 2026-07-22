@@ -1,0 +1,30 @@
+.badge {
+  display: inline-flex;
+  height: 22px;
+  align-items: center;
+  gap: 5px;
+  padding: 0 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  background: var(--panel);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.badge i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.running,
+.queued,
+.created { color: var(--cyan); }
+.awaiting_approval,
+.input_required { color: var(--yellow); }
+.completed { color: var(--green); }
+.failed { color: var(--red); }
+.canceled { color: var(--text-faint); }

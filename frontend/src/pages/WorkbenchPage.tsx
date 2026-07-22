@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import type { TFunction } from "i18next";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import {
@@ -29,6 +30,7 @@ import {
 import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 
 import { agentIcons, agentLabels, agentOrder } from "../components/agentVisuals";
+import { StatusBadge } from "../components/StatusBadge";
 import { useAuth } from "../auth/AuthContext";
 import { api } from "../lib/api";
 import type { AgentName, AgentSummary, Approval, Artifact, TaskRecord, TaskView, Trace } from "../types";
@@ -222,8 +224,8 @@ function TaskSidebar({ tasks, total, activeTotal, scope, search, selectedTaskId,
         </div>
       </div>
       <div className={styles.queueFilters}>
-        <button type="button" className={scope === "all" ? styles.filterActive : ""} onClick={() => onScope("all")}>All <span>{total}</span></button>
-        <button type="button" className={scope === "active" ? styles.filterActive : ""} onClick={() => onScope("active")}>Active <span>{activeTotal}</span></button>
+        <button type="button" className={scope === "all" ? styles.filterActive : ""} onClick={() => onScope("all")}>{t("workbench.scopeAll")} <span>{total}</span></button>
+        <button type="button" className={scope === "active" ? styles.filterActive : ""} onClick={() => onScope("active")}>{t("workbench.scopeActive")} <span>{activeTotal}</span></button>
       </div>
       <label className={styles.taskSearch}><Search size={13} /><input value={search} onChange={(event) => onSearch(event.target.value)} placeholder={t("workbench.searchTasks")} aria-label={t("workbench.searchTasks")} /></label>
       <div className={styles.taskList}>
@@ -233,7 +235,7 @@ function TaskSidebar({ tasks, total, activeTotal, scope, search, selectedTaskId,
             <span className={styles.taskItemBody}>
               <strong>{task.prompt}</strong>
               <small><GitBranch size={11} />{task.repo_id}</small>
-              <em>{formatRelative(task.updated_at)}</em>
+              <em>{formatRelative(task.updated_at, t)}</em>
             </span>
           </button>
         ))}
@@ -280,6 +282,7 @@ function TaskHeader({ view, pendingApproval, onDecision, onCancel, onRerun, onRe
 }
 
 function PhaseRail({ view, agents, onSelectAgent }: { view: TaskView; agents: AgentSummary[]; onSelectAgent: (name: AgentName) => void }) {
+  const { t } = useTranslation();
   const statuses = new Map(agents.map((agent) => [agent.agent_name, agent.status]));
   return (
     <div className={styles.phaseRail} aria-label="Workflow stages">
@@ -289,12 +292,12 @@ function PhaseRail({ view, agents, onSelectAgent }: { view: TaskView; agents: Ag
         return (
           <button key={name} type="button" data-agent={name} className={`${styles.phase} ${styles[`phase_${state}`] ?? ""}`} onClick={() => onSelectAgent(name)}>
             <span className={styles.phaseIcon}><Icon size={16} /></span>
-            <span><strong>{agentLabels[name]}</strong><small>{state.replaceAll("_", " ")}</small></span>
+            <span><strong>{agentLabels[name]}</strong><small>{t(`task.${state}`, { defaultValue: state.replaceAll("_", " ") })}</small></span>
             {index < agentOrder.length - 1 && <ArrowRight className={styles.phaseArrow} size={13} />}
           </button>
         );
       })}
-      <span className={styles.runMeta}>Run {view.runs.at(-1)?.attempt ?? 1}</span>
+      <span className={styles.runMeta}>{t("workbench.run", { attempt: view.runs.at(-1)?.attempt ?? 1 })}</span>
     </div>
   );
 }
@@ -309,14 +312,14 @@ function Overview({ view, trace }: { view: TaskView; trace?: Trace }) {
     <div className={styles.overviewGrid}>
       <section className={styles.objectiveBand}>
         <div>
-          <span className={styles.sectionLabel}>Current objective</span>
+          <span className={styles.sectionLabel}>{t("workbench.currentObjective")}</span>
           <h2>{view.task.prompt}</h2>
-          <p>{view.task.workspace_path ? `Isolated collaboration copy of ${view.task.workspace_path}` : view.task.repo_id}</p>
+          <p>{view.task.workspace_path ? t("workbench.isolatedCopy", { path: view.task.workspace_path }) : view.task.repo_id}</p>
         </div>
         <div className={styles.objectiveFacts}>
           <span><Clock3 size={14} />{latestStep?.name ?? view.task.current_step}</span>
           <span><GitBranch size={14} />{view.task.branch_name ?? view.task.base_branch}</span>
-          <span><FileCode2 size={14} />{view.artifacts.length} artifacts</span>
+          <span><FileCode2 size={14} />{t("workbench.artifactCount", { count: view.artifacts.length })}</span>
         </div>
       </section>
 
@@ -331,7 +334,7 @@ function Overview({ view, trace }: { view: TaskView; trace?: Trace }) {
       )}
 
       <section className={styles.flowMap}>
-        <div className={styles.sectionHeader}><span>Agent handoff map</span><small>{trace?.agent_runs.length ?? 0} agent runs</small></div>
+        <div className={styles.sectionHeader}><span>{t("workbench.handoffMap")}</span><small>{t("workbench.agentRuns", { count: trace?.agent_runs.length ?? 0 })}</small></div>
         <div className={styles.flowNodes}>
           {agentOrder.map((name, index) => {
             const run = trace?.agent_runs.findLast((item) => item.agent_name === name);
@@ -340,7 +343,7 @@ function Overview({ view, trace }: { view: TaskView; trace?: Trace }) {
               <div key={name} className={`${styles.flowNode} ${run ? styles.flowNodeDone : ""}`} data-agent={name}>
                 <span><Icon size={18} /></span>
                 <strong>{agentLabels[name]}</strong>
-                <small>{run?.latency_ms != null ? `${run.latency_ms}ms` : "waiting"}</small>
+                <small>{run?.latency_ms != null ? `${run.latency_ms}ms` : t("workbench.waiting")}</small>
                 {index < agentOrder.length - 1 && <i />}
               </div>
             );
@@ -349,21 +352,21 @@ function Overview({ view, trace }: { view: TaskView; trace?: Trace }) {
       </section>
 
       <section className={styles.summaryPanel}>
-        <div className={styles.sectionHeader}><span>Quality gates</span><small>Deterministic</small></div>
-        <GateRow label="Tests" passed={Boolean(testArtifact)} detail={testArtifact?.content ?? "Waiting for test agent"} />
-        <GateRow label="Security" passed={view.steps.some((step) => step.name === "security" && step.status === "completed")} detail="Secret scan and permission policy" />
-        <GateRow label="Review" passed={Boolean(reviewArtifact)} detail={reviewArtifact?.content ?? "Waiting for review agent"} />
+        <div className={styles.sectionHeader}><span>{t("workbench.qualityGates")}</span><small>{t("workbench.deterministic")}</small></div>
+        <GateRow label={t("workbench.gateTests")} passed={Boolean(testArtifact)} detail={testArtifact?.content ?? t("workbench.gateWaitingTest")} />
+        <GateRow label={t("workbench.gateSecurity")} passed={view.steps.some((step) => step.name === "security" && step.status === "completed")} detail={t("workbench.gateSecurityDetail")} />
+        <GateRow label={t("workbench.gateReview")} passed={Boolean(reviewArtifact)} detail={reviewArtifact?.content ?? t("workbench.gateWaitingReview")} />
       </section>
 
       <section className={styles.summaryPanel}>
-        <div className={styles.sectionHeader}><span>Run facts</span><small>{view.task.trace_id.slice(-10)}</small></div>
+        <div className={styles.sectionHeader}><span>{t("workbench.runFacts")}</span><small>{view.task.trace_id.slice(-10)}</small></div>
         <dl className={styles.factList}>
-          <div><dt>Policy</dt><dd>{view.task.approval_policy}</dd></div>
-          <div><dt>Priority</dt><dd>{view.task.priority}</dd></div>
-          <div><dt>Steps</dt><dd>{view.steps.filter((step) => step.status === "completed").length} / {agentOrder.length}</dd></div>
-          <div><dt>Model calls</dt><dd>{trace?.model_calls.length ?? 0} · {trace?.model_calls.filter((call) => !call.simulated).length ?? 0} {t("common.live")} / {trace?.model_calls.filter((call) => call.simulated).length ?? 0} {t("common.simulated")}</dd></div>
-          <div><dt>Tool calls</dt><dd>{trace?.tool_calls.length ?? 0}</dd></div>
-          <div><dt>Next action</dt><dd>{pending ? "Human approval" : nextAction(view.task)}</dd></div>
+          <div><dt>{t("workbench.factPolicy")}</dt><dd>{view.task.approval_policy}</dd></div>
+          <div><dt>{t("workbench.factPriority")}</dt><dd>{view.task.priority}</dd></div>
+          <div><dt>{t("workbench.factSteps")}</dt><dd>{view.steps.filter((step) => step.status === "completed").length} / {agentOrder.length}</dd></div>
+          <div><dt>{t("workbench.factModelCalls")}</dt><dd>{trace?.model_calls.length ?? 0} · {trace?.model_calls.filter((call) => !call.simulated).length ?? 0} {t("common.live")} / {trace?.model_calls.filter((call) => call.simulated).length ?? 0} {t("common.simulated")}</dd></div>
+          <div><dt>{t("workbench.factToolCalls")}</dt><dd>{trace?.tool_calls.length ?? 0}</dd></div>
+          <div><dt>{t("workbench.factNextAction")}</dt><dd>{pending ? t("workbench.humanApproval") : nextAction(view.task, t)}</dd></div>
         </dl>
       </section>
     </div>
@@ -371,10 +374,12 @@ function Overview({ view, trace }: { view: TaskView; trace?: Trace }) {
 }
 
 function GateRow({ label, passed, detail }: { label: string; passed: boolean; detail: string }) {
-  return <div className={styles.gateRow}>{passed ? <CheckCircle2 size={15} /> : <Circle size={15} />}<span><strong>{label}</strong><small>{detail}</small></span><em>{passed ? "passed" : "pending"}</em></div>;
+  const { t } = useTranslation();
+  return <div className={styles.gateRow}>{passed ? <CheckCircle2 size={15} /> : <Circle size={15} />}<span><strong>{label}</strong><small>{detail}</small></span><em>{passed ? t("workbench.gatePassed") : t("workbench.gatePending")}</em></div>;
 }
 
 function Artifacts({ artifacts }: { artifacts: Artifact[] }) {
+  const { t } = useTranslation();
   const [selected, setSelected] = useState<string | undefined>(artifacts.at(-1)?.id);
   const artifact = artifacts.find((item) => item.id === selected) ?? artifacts[0];
   return (
@@ -386,16 +391,17 @@ function Artifacts({ artifacts }: { artifacts: Artifact[] }) {
           </button>
         ))}
       </div>
-      <pre className={styles.artifactContent}>{artifact?.content ?? "No artifact generated yet."}</pre>
+      <pre className={styles.artifactContent}>{artifact?.content ?? t("workbench.noArtifact")}</pre>
     </div>
   );
 }
 
 function TraceView({ trace }: { trace?: Trace }) {
-  if (!trace) return <div className={styles.loading}>Loading trace...</div>;
+  const { t } = useTranslation();
+  if (!trace) return <div className={styles.loading}>{t("workbench.loadingTrace")}</div>;
   return (
     <div className={styles.traceTable}>
-      <div className={styles.traceHead}><span>Time</span><span>Actor</span><span>Event</span><span>Payload</span></div>
+      <div className={styles.traceHead}><span>{t("workbench.traceTime")}</span><span>{t("workbench.traceActor")}</span><span>{t("workbench.traceEvent")}</span><span>{t("workbench.tracePayload")}</span></div>
       {trace.events.toReversed().map((event) => (
         <div key={event.id} className={styles.traceRow}>
           <time>{formatTime(event.created_at)}</time><span>{event.actor}</span><strong>{event.event_type}</strong><code>{compactPayload(event.payload)}</code>
@@ -431,21 +437,21 @@ function AgentInspector({ agents, selected, selectedData, messages, input, open,
           <div><h2>{agentLabels[selected]}</h2><p>{selectedData?.description}</p></div>
           <StatusBadge status={selectedData?.status ?? "pending"} />
         </div>
-        <div className={styles.configLine}><span>Model</span><strong>{selectedData?.configuration.provider_id}/{selectedData?.configuration.model}</strong></div>
-        <div className={styles.configLine}><span>Mode</span><strong className={selectedData?.configuration.call_mode === "live" ? styles.liveText : styles.simulatedText}>{selectedData?.configuration.call_mode === "live" ? t("common.live") : t("common.simulated")}</strong></div>
+        <div className={styles.configLine}><span>{t("workbench.model")}</span><strong>{selectedData?.configuration.provider_id}/{selectedData?.configuration.model}</strong></div>
+        <div className={styles.configLine}><span>{t("workbench.mode")}</span><strong className={selectedData?.configuration.call_mode === "live" ? styles.liveText : styles.simulatedText}>{selectedData?.configuration.call_mode === "live" ? t("common.live") : t("common.simulated")}</strong></div>
         <div className={styles.objectiveBox}>
-          <span>Latest output</span>
-          <p>{selectedData?.last_summary ?? "Waiting for this agent to receive a handoff."}</p>
+          <span>{t("workbench.latestOutput")}</span>
+          <p>{selectedData?.last_summary ?? t("workbench.waitingHandoff")}</p>
         </div>
       </section>
       <section className={styles.chatPanel}>
         <div className={styles.chatHeader}><span>{t("workbench.chat")}</span><small>{agentLabels[selected]}</small></div>
         <div className={styles.messages}>
           {relevantMessages.map((message) => <div key={message.id} className={message.role === "user" ? styles.userMessage : styles.agentMessage}><small>{message.role}</small><p>{message.content}</p></div>)}
-          {relevantMessages.length === 0 && <p className={styles.chatEmpty}>Send context or a question to this agent.</p>}
+          {relevantMessages.length === 0 && <p className={styles.chatEmpty}>{t("workbench.chatEmpty")}</p>}
         </div>
         {canChat && <div className={styles.composer}>
-          <textarea rows={2} value={input} onChange={(event) => onInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }} placeholder={`Message ${agentLabels[selected]}...`} />
+          <textarea rows={2} value={input} onChange={(event) => onInput(event.target.value)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); onSend(); } }} placeholder={t("workbench.messagePlaceholder", { agent: agentLabels[selected] })} />
           <button type="button" onClick={onSend} disabled={!input.trim()} title={t("workbench.send")} aria-label={t("workbench.send")}><Send size={16} /></button>
         </div>}
       </section>
@@ -459,13 +465,13 @@ function EventConsole({ trace, paused, onToggle, onRefresh }: { trace?: Trace; p
     <section className={styles.console}>
       <header>
         <span><TerminalSquare size={14} />{t("workbench.eventStream")}</span>
-        <div><span className={styles.liveIndicator}><i />{paused ? "Paused" : "Live"}</span><button type="button" onClick={onRefresh} title={t("common.refresh")} aria-label={t("common.refresh")}><RefreshCw size={13} /></button><button type="button" onClick={onToggle} title={paused ? "Resume" : "Pause"} aria-label={paused ? "Resume" : "Pause"}>{paused ? <Play size={13} /> : <Pause size={13} />}</button></div>
+        <div><span className={styles.liveIndicator}><i />{paused ? t("workbench.consolePaused") : t("workbench.consoleLive")}</span><button type="button" onClick={onRefresh} title={t("common.refresh")} aria-label={t("common.refresh")}><RefreshCw size={13} /></button><button type="button" onClick={onToggle} title={paused ? t("workbench.resume") : t("workbench.pause")} aria-label={paused ? t("workbench.resume") : t("workbench.pause")}>{paused ? <Play size={13} /> : <Pause size={13} />}</button></div>
       </header>
       <div className={styles.consoleRows}>
         {trace?.events.toReversed().slice(0, 40).map((event) => (
           <div key={event.id}><time>{formatTime(event.created_at)}</time><strong data-agent={event.actor}>{event.actor}</strong><span>{event.event_type}</span><code>{compactPayload(event.payload)}</code></div>
         ))}
-        {!trace?.events.length && <p>No task events yet.</p>}
+        {!trace?.events.length && <p>{t("workbench.noEvents")}</p>}
       </div>
     </section>
   );
@@ -473,27 +479,21 @@ function EventConsole({ trace, paused, onToggle, onRefresh }: { trace?: Trace; p
 
 function EmptyWorkspace({ loading, onNew }: { loading: boolean; onNew?: () => void }) {
   const { t } = useTranslation();
-  return <div className={styles.emptyWorkspace}><span><TerminalSquare size={26} /></span><h1>{loading ? "Loading..." : t("workbench.selectTask")}</h1><p>{t("settings.providerExecutionHelp")}</p>{onNew && <button type="button" onClick={onNew}><Plus size={16} />{t("workbench.newTask")}</button>}</div>;
+  return <div className={styles.emptyWorkspace}><span><TerminalSquare size={26} /></span><h1>{loading ? t("workbench.loading") : t("workbench.selectTask")}</h1><p>{t("settings.providerExecutionHelp")}</p>{onNew && <button type="button" onClick={onNew}><Plus size={16} />{t("workbench.newTask")}</button>}</div>;
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const { t } = useTranslation();
-  const translated = t(`task.${status}`, { defaultValue: status.replaceAll("_", " ") });
-  return <span className={`${styles.statusBadge} ${styles[`badge_${status}`]}`}><i />{translated}</span>;
-}
-
-function nextAction(task: TaskRecord): string {
-  if (task.status === "completed") return task.pr_url ? "Review draft PR" : "Inspect artifacts";
-  if (task.status === "failed") return "Review failure and rerun";
-  if (task.status === "input_required") return "Provide requested changes";
+function nextAction(task: TaskRecord, t: TFunction): string {
+  if (task.status === "completed") return task.pr_url ? t("workbench.nextReviewPr") : t("workbench.nextInspect");
+  if (task.status === "failed") return t("workbench.nextRerun");
+  if (task.status === "input_required") return t("workbench.nextChanges");
   return task.current_step.replaceAll("_", " ");
 }
 
-function formatRelative(value: string): string {
+function formatRelative(value: string, t: TFunction): string {
   const seconds = Math.max(0, Math.floor((Date.now() - new Date(value).getTime()) / 1000));
-  if (seconds < 60) return `${seconds}s ago`;
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  return `${Math.floor(seconds / 3600)}h ago`;
+  if (seconds < 60) return t("workbench.timeAgoS", { count: seconds });
+  if (seconds < 3600) return t("workbench.timeAgoM", { count: Math.floor(seconds / 60) });
+  return t("workbench.timeAgoH", { count: Math.floor(seconds / 3600) });
 }
 
 function formatTime(value: string): string {
