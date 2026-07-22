@@ -111,7 +111,7 @@ def build_v1_router(resolve_container) -> APIRouter:
                 max_age=app_container.settings.auth_session_ttl_hours * 3600,
                 httponly=True,
                 secure=app_container.settings.auth_cookie_secure,
-                samesite="lax",
+                samesite=app_container.settings.auth_cookie_samesite,
                 path="/",
             )
         app_container.trace.audit(
@@ -151,7 +151,12 @@ def build_v1_router(resolve_container) -> APIRouter:
             tenant_id=principal.tenant_id,
             actor_id=principal.user_id,
         )
-        response.delete_cookie(app_container.settings.auth_cookie_name, path="/")
+        response.delete_cookie(
+            app_container.settings.auth_cookie_name,
+            path="/",
+            secure=app_container.settings.auth_cookie_secure,
+            samesite=app_container.settings.auth_cookie_samesite,
+        )
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
 

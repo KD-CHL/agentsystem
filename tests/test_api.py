@@ -33,28 +33,15 @@ def test_task_api_approval_flow() -> None:
     assert approved.json()["task"]["status"] == "completed"
 
 
-def test_root_serves_console_ui() -> None:
+def test_api_only_no_static_console() -> None:
     client = TestClient(create_app(AppContainer()))
 
-    response = client.get("/")
+    # Static console hosting was removed; the backend is a pure JSON API now.
+    assert client.get("/").status_code == 404
+    assert client.get("/legacy").status_code == 404
 
-    assert response.status_code == 200
-    assert '<div id="root"></div>' in response.text
-    assert "AgentSystem" in response.text
-
-    legacy = client.get("/legacy")
-    assert legacy.status_code == 200
-    response = legacy
-    assert "AgentSystem 控制台" in response.text
-    assert "创建任务" in response.text
-    assert "Agent 工作状态" in response.text
-    assert "Agent 模型路由" in response.text
-    assert "本地项目" in response.text
-    assert "AI 协作对话" in response.text
-    assert "切换白天黑夜模式" in response.text
-    assert "界面语言" in response.text
-    assert "agentsystem-language" in response.text
-    assert "选择项目目录" in response.text
+    health = client.get("/health")
+    assert health.status_code == 200
 
 
 def test_workspace_open_and_task_context(tmp_path) -> None:

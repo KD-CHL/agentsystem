@@ -2,17 +2,17 @@ from __future__ import annotations
 
 from contextlib import asynccontextmanager
 from dataclasses import asdict
-from pathlib import Path
 from uuid import uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Request, status
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import FileResponse, HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from agentsystem.api_v1 import build_v1_router
 from agentsystem.auth import AuthenticationError, AuthorizationError
+from agentsystem.config import get_settings
 from agentsystem.container import AppContainer, get_container
 from agentsystem.domain import (
     AgentModelUpdate,
@@ -35,7 +35,6 @@ from agentsystem.domain import (
 )
 from agentsystem.model_gateway import ModelGatewayError
 from agentsystem.store import NotFoundError
-from agentsystem.ui import render_index
 
 
 def create_app(container: AppContainer | None = None) -> FastAPI:
@@ -58,18 +57,22 @@ def create_app(container: AppContainer | None = None) -> FastAPI:
         lifespan=lifespan,
     )
 
+    cors_origins = [origin.strip() for origin in get_settings().cors_origins.split(",") if origin.strip()]
+    if cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=cors_origins,
+            allow_credentials=True,
+            allow_methods=["*"],
+            allow_headers=["Content-Type", "Authorization", "Idempotency-Key", "X-Request-ID"],
+            expose_headers=["X-Total-Count", "X-Request-ID"],
+        )
+
     @app.middleware("http")
     async def request_context(request: Request, call_next):
         request_id = request.headers.get("X-Request-ID") or f"req_{uuid4().hex[:16]}"
         request.state.request_id = request_id
         path = request.url.path
-        accepts_html = "text/html" in request.headers.get("accept", "")
-        if request.method == "GET" and accepts_html and (path == "/tasks" or path.startswith("/tasks/")):
-            frontend_index = Path(resolve_container().settings.frontend_dist) / "index.html"
-            if frontend_index.exists():
-                response = FileResponse(frontend_index)
-                response.headers["X-Request-ID"] = request_id
-                return response
         public_api_paths = {"/health", "/api/v1/system", "/api/v1/auth/login"}
         legacy_api_prefixes = (
             "/agent-models",
@@ -178,17 +181,6 @@ def create_app(container: AppContainer | None = None) -> FastAPI:
                 }
             },
         )
-
-    @app.get("/", response_class=HTMLResponse)
-    def index():
-        frontend_index = Path(resolve_container().settings.frontend_dist) / "index.html"
-        if frontend_index.exists():
-            return FileResponse(frontend_index)
-        return render_index()
-
-    @app.get("/legacy", response_class=HTMLResponse)
-    def legacy() -> str:
-        return render_index()
 
     @app.get("/health")
     def health() -> dict[str, str]:
@@ -479,18 +471,6 @@ def create_app(container: AppContainer | None = None) -> FastAPI:
             raise HTTPException(status_code=404, detail="Task not found") from exc
 
     app.include_router(build_v1_router(resolve_container))
-
-    frontend_dist = Path(resolve_container().settings.frontend_dist)
-    assets = frontend_dist / "assets"
-    if assets.exists():
-        app.mount("/assets", StaticFiles(directory=assets), name="frontend-assets")
-
-    @app.get("/{full_path:path}")
-    def frontend_fallback(full_path: str):
-        frontend_index = frontend_dist / "index.html"
-        if frontend_index.exists() and not full_path.startswith(("api/", "tasks/", "workspaces/")):
-            return FileResponse(frontend_index)
-        raise HTTPException(status_code=404, detail="Not Found")
 
     return app
 

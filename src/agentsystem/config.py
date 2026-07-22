@@ -45,6 +45,8 @@ class Settings(BaseSettings):
     auth_mode: str = "dev"
     auth_cookie_name: str = "agentsystem_session"
     auth_cookie_secure: bool = False
+    auth_cookie_samesite: str = "lax"
+    cors_origins: str = ""
     auth_session_ttl_hours: int = Field(default=12, ge=1, le=720)
     bootstrap_admin_username: str = "admin"
     bootstrap_admin_display_name: str = "Local Administrator"
@@ -52,7 +54,6 @@ class Settings(BaseSettings):
     allowed_project_roots: str = ""
     workflow_poll_interval_seconds: float = Field(default=0.25, ge=0.05, le=10)
     workflow_lease_seconds: int = Field(default=60, ge=10, le=3600)
-    frontend_dist: str = "frontend/dist"
 
     mcp_network_enabled: bool = True
     mcp_allowed_hosts: str = "127.0.0.1,localhost,::1"
