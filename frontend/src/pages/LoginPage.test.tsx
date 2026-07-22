@@ -27,6 +27,6 @@ describe("LoginPage", () => {
     fireEvent.click(screen.getByRole("button", { name: /sign in|登录工作台/i }));
 
     await waitFor(() => expect(signedIn).toHaveBeenCalledWith(session));
-    expect(fetchMock).toHaveBeenCalledWith("/api/v1/auth/login", expect.objectContaining({ method: "POST", credentials: "same-origin" }));
+    expect(fetchMock).toHaveBeenCalledWith("/api/v1/auth/login", expect.objectContaining({ method: "POST", credentials: "include" }));
   });
 });

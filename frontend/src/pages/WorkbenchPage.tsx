@@ -32,7 +32,7 @@ import { useNavigate, useOutletContext, useParams } from "react-router-dom";
 import { agentIcons, agentLabels, agentOrder } from "../components/agentVisuals";
 import { StatusBadge } from "../components/StatusBadge";
 import { useAuth } from "../auth/AuthContext";
-import { api } from "../lib/api";
+import { api, API_BASE } from "../lib/api";
 import type { AgentName, AgentSummary, Approval, Artifact, TaskRecord, TaskView, Trace } from "../types";
 import styles from "./WorkbenchPage.module.css";
 
@@ -91,7 +91,7 @@ export function WorkbenchPage() {
 
   useEffect(() => {
     if (!selectedTaskId) return;
-    const source = new EventSource(`/api/v1/tasks/${selectedTaskId}/events?follow=true`);
+    const source = new EventSource(`${API_BASE}/api/v1/tasks/${selectedTaskId}/events?follow=true`, { withCredentials: true });
     const invalidate = () => {
       void queryClient.invalidateQueries({ queryKey: ["task", selectedTaskId] });
       void queryClient.invalidateQueries({ queryKey: ["agents", selectedTaskId] });

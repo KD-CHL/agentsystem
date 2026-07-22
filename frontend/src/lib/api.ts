@@ -27,6 +27,13 @@ import type {
   UserStatus,
 } from "../types";
 
+/**
+ * Base URL of the backend API. Empty in local development (requests stay
+ * same-origin and are proxied by Vite to 127.0.0.1:8000). On Vercel, set
+ * VITE_API_BASE_URL to the deployed backend origin for cross-origin calls.
+ */
+export const API_BASE = (import.meta.env.VITE_API_BASE_URL ?? "").replace(/\/+$/, "");
+
 export class ApiError extends Error {
   code: string;
   requestId?: string;
@@ -45,7 +52,7 @@ async function performRequest(path: string, init?: RequestInit): Promise<Respons
   if (init?.body && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const response = await fetch(path, { credentials: "same-origin", ...init, headers });
+  const response = await fetch(`${API_BASE}${path}`, { credentials: "include", ...init, headers });
   if (!response.ok) {
     let body: ApiErrorBody = {};
     try {
