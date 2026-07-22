@@ -59,9 +59,5 @@
 .inputWrap input { width: 100%; min-width: 0; border: 0; outline: 0; color: var(--text); background: transparent; font-size: 12px; }
 .loginPanel form > button { display: inline-flex; height: 39px; align-items: center; justify-content: center; gap: 8px; margin-top: 3px; border-radius: var(--radius-sm); color: #fff; background: var(--accent-action); font-size: 11px; font-weight: 750; }
 .loginPanel form > button:disabled { cursor: not-allowed; opacity: 0.55; }
-.divider { display: flex; align-items: center; gap: 10px; margin-top: 2px; color: var(--text-faint); font-size: 8px; font-weight: 700; text-transform: uppercase; }
-.divider::before, .divider::after { content: ""; height: 1px; flex: 1; background: var(--border); }
-.githubButton { border: 1px solid var(--border) !important; color: var(--text) !important; background: var(--bg-elevated) !important; }
-.githubButton:hover { border-color: var(--accent) !important; color: var(--accent-strong) !important; }
 .error { margin: 0; color: var(--red); font-size: 10px; font-weight: 500; text-transform: none; }
 .loginPanel footer { padding: 12px 18px; border-top: 1px solid var(--border); color: var(--text-faint); background: var(--bg-subtle); font-size: 8px; text-align: center; }

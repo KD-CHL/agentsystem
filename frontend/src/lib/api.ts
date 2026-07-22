@@ -129,16 +129,6 @@ export const api = {
     return session;
   },
   logout: () => request<void>("/api/v1/auth/logout", { method: "POST" }),
-  githubConfig: () =>
-    request<{ enabled: boolean; client_id: string }>("/api/v1/auth/github/config"),
-  githubLogin: async (code: string) => {
-    const session = await request<AuthSession>("/api/v1/auth/github", {
-      method: "POST",
-      body: JSON.stringify({ code }),
-    });
-    if (session.token) setToken(session.token);
-    return session;
-  },
   users: () => request<User[]>("/api/v1/users"),
   createUser: (payload: { username: string; display_name: string; password: string; role: UserRole }) =>
     request<User>("/api/v1/users", { method: "POST", body: JSON.stringify(payload) }),

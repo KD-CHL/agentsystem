@@ -1,6 +1,6 @@
-import { useEffect, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 import { useMutation } from "@tanstack/react-query";
-import { Boxes, Github, KeyRound, LockKeyhole, TriangleAlert, UserRound } from "lucide-react";
+import { Boxes, KeyRound, LockKeyhole, TriangleAlert, UserRound } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { api } from "../lib/api";
@@ -11,7 +11,6 @@ export function LoginPage({ onSignedIn, backendUnreachable = false }: { onSigned
   const { t } = useTranslation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [githubClientId, setGithubClientId] = useState<string | null>(null);
   const signIn = useMutation({
     mutationFn: () => api.login(username.trim(), password),
     onSuccess: (session) => onSignedIn(session),
@@ -19,31 +18,6 @@ export function LoginPage({ onSignedIn, backendUnreachable = false }: { onSigned
   const submit = (event: FormEvent) => {
     event.preventDefault();
     if (username.trim() && password) signIn.mutate();
-  };
-
-  useEffect(() => {
-    let active = true;
-    api.githubConfig()
-      .then((config) => {
-        if (active && config.enabled && config.client_id) setGithubClientId(config.client_id);
-      })
-      .catch(() => {
-        // GitHub OAuth not configured on this backend — button stays hidden.
-      });
-    return () => {
-      active = false;
-    };
-  }, []);
-
-  const startGithubLogin = () => {
-    if (!githubClientId) return;
-    const redirectUri = `${location.origin}/github-callback.html`;
-    const url =
-      "https://github.com/login/oauth/authorize" +
-      `?client_id=${encodeURIComponent(githubClientId)}` +
-      `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-      "&scope=read:user";
-    location.href = url;
   };
 
   return (
@@ -77,14 +51,6 @@ export function LoginPage({ onSignedIn, backendUnreachable = false }: { onSigned
           <button type="submit" disabled={backendUnreachable || !username.trim() || password.length < 8 || signIn.isPending}>
             <LockKeyhole size={16} />{signIn.isPending ? t("auth.signingIn") : t("auth.signIn")}
           </button>
-          {githubClientId && !backendUnreachable && (
-            <>
-              <span className={styles.divider}><span>{t("auth.or")}</span></span>
-              <button type="button" className={styles.githubButton} onClick={startGithubLogin}>
-                <Github size={16} />{t("auth.githubSignIn")}
-              </button>
-            </>
-          )}
         </form>
         <footer>{t("auth.cookieNotice")}</footer>
       </section>

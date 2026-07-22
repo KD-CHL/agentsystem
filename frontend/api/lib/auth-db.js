@@ -79,19 +79,10 @@ export function createUser(username, password, role = 'viewer', displayName) {
     created_at: now,
     updated_at: now,
     last_login_at: null,
-    github_id: null,
     salt,
     hash,
   };
   users.push(user);
-  saveUsers();
-  return user;
-}
-
-export function createGithubUser(username, githubId) {
-  // GitHub users get an unguessable random password — password login is impossible.
-  const user = createUser(username, crypto.randomBytes(24).toString('hex'), 'viewer', username);
-  user.github_id = githubId;
   saveUsers();
   return user;
 }
@@ -103,10 +94,6 @@ export function findUserByUsername(username) {
 
 export function findUserById(id) {
   return users.find((u) => u.id === id) || null;
-}
-
-export function findUserByGithubId(githubId) {
-  return users.find((u) => u.github_id === githubId) || null;
 }
 
 export function updateUser(id, patch) {
@@ -123,7 +110,7 @@ export function listUsers() {
 
 export function publicUser(user) {
   if (!user) return null;
-  const { salt, hash, github_id, ...rest } = user;
+  const { salt, hash, ...rest } = user;
   return rest;
 }
 

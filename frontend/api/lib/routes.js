@@ -9,15 +9,12 @@ import {
   getSession,
   findUserByUsername,
   findUserById,
-  findUserByGithubId,
   verifyPassword,
   createUser,
-  createGithubUser,
   updateUser,
   listUsers,
   publicUser,
 } from './auth-db.js';
-import { githubEnabled, GITHUB_CLIENT_ID, exchangeCode, fetchGithubUser } from './github-oauth.js';
 import { getCloudData } from './data-store.js';
 
 const ROLES = ['admin', 'operator', 'reviewer', 'viewer'];
@@ -197,33 +194,6 @@ async function handleLogin(req, res) {
   return sendJson(res, 200, sessionView(user, token));
 }
 
-async function handleGithubLogin(req, res) {
-  if (!githubEnabled()) {
-    return sendError(res, 503, 'GITHUB_OAUTH_DISABLED', 'GitHub login is not configured on this deployment');
-  }
-  const body = await readBody(req);
-  const code = String(body.code || '');
-  if (!code) return sendError(res, 400, 'VALIDATION_ERROR', 'Missing authorization code');
-  try {
-    const accessToken = await exchangeCode(code);
-    const gh = await fetchGithubUser(accessToken);
-    let user = findUserByGithubId(gh.id);
-    if (!user) {
-      let name = gh.login;
-      while (findUserByUsername(name)) name += '_gh';
-      user = createGithubUser(name, gh.id);
-      if (gh.name) updateUser(user.id, { display_name: gh.name });
-    } else if (user.status !== 'active') {
-      return sendError(res, 403, 'ACCOUNT_DISABLED', 'This account has been disabled');
-    }
-    updateUser(user.id, { last_login_at: new Date().toISOString() });
-    const token = createSession(user.id);
-    return sendJson(res, 200, sessionView(user, token));
-  } catch (err) {
-    return sendError(res, 502, 'GITHUB_LOGIN_FAILED', 'GitHub login failed: ' + err.message);
-  }
-}
-
 // --- user management (admin only, mirrors FastAPI user routes) ---
 
 async function handleCreateUser(req, res) {
@@ -289,10 +259,6 @@ export async function handleApi(req, res, urlPath) {
 
   // ---- public endpoints ----
   if (urlPath === '/api/v1/auth/login' && method === 'POST') return handleLogin(req, res);
-  if (urlPath === '/api/v1/auth/github/config' && method === 'GET') {
-    return sendJson(res, 200, { enabled: githubEnabled(), client_id: GITHUB_CLIENT_ID });
-  }
-  if (urlPath === '/api/v1/auth/github' && method === 'POST') return handleGithubLogin(req, res);
   if (urlPath === '/api/v1/system' && method === 'GET') {
     const data = getCloudData();
     const synced = data.system || {};
